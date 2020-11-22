@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Open Music</string>
+    <string name="app_name_incomplete">pen Mus  c</string>
+    <string name="app_desc">lossless music for everyone</string>
+    <string name="search_hint">Search song, artist,&#8230;</string>
+    <string name="empty_result">No result found</string>
+</resources>

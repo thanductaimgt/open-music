@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="34dp">
+
+    <ImageView
+        android:id="@+id/logoBg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="50dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        android:src="@drawable/logo"
+        tools:alpha="0.2" />
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:colorBackground"
+            android:minHeight="64dp"
+            app:layout_scrollFlags="exitUntilCollapsed|scroll|snap">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:layout_collapseMode="pin">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/searchInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    app:cardCornerRadius="10dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <EditText
+                        android:text="mưa thùy chi"
+                        android:paddingHorizontal="45dp"
+                        android:id="@+id/searchEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@null"
+                        android:hint="@string/search_hint"
+                        android:inputType="text"
+                        android:textAlignment="center" />
+
+                    <ImageView
+                        android:id="@+id/searchButton"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_margin="6dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="9dp"
+                        android:src="@drawable/search"
+                        app:tint="?colorOnBackground" />
+
+                    <ImageView
+                        android:id="@+id/historyButton"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_margin="6dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="9dp"
+                        android:src="@drawable/history"
+                        app:tint="?colorOnBackground" />
+                </androidx.cardview.widget.CardView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:paddingBottom="8dp"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="68dp"
+                tools:context=".MainActivity">
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_margin="4sp"
+                    android:src="@drawable/o"
+                    app:layout_constraintBottom_toBottomOf="@id/appNameTextView"
+                    app:layout_constraintDimensionRatio="W,1:1"
+                    app:layout_constraintEnd_toStartOf="@id/appNameTextView"
+                    app:layout_constraintTop_toTopOf="@id/appNameTextView" />
+
+                <TextView
+                    android:id="@+id/appNameTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20sp"
+                    android:letterSpacing="0.8"
+                    android:shadowColor="?colorOnBackground"
+                    android:shadowRadius="1"
+                    android:text="@string/app_name_incomplete"
+                    android:textAllCaps="true"
+                    android:textColor="?colorOnBackground"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constrainedWidth="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginVertical="3sp"
+                    android:layout_marginEnd="28sp"
+                    android:src="@drawable/i"
+                    app:layout_constraintBottom_toBottomOf="@id/appNameTextView"
+                    app:layout_constraintDimensionRatio="W,1:1"
+                    app:layout_constraintEnd_toEndOf="@id/appNameTextView"
+                    app:layout_constraintTop_toTopOf="@id/appNameTextView" />
+
+                <TextView
+                    android:letterSpacing="0.1"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_desc"
+                    app:layout_constraintTop_toBottomOf="@id/appNameTextView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constrainedWidth="true"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/contentView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/item_song" />
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/loadingAnimView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:visibility="invisible"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/loading" />
+
+        <ImageView
+            android:id="@+id/emptyIcon"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="36dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/empty"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?colorOnBackground"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/emptyDescTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/empty_result"
+            android:textAllCaps="true"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="invisible"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/emptyIcon"
+            tools:visibility="visible" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/topButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="24dp"
+        android:alpha="0"
+        android:scaleType="fitCenter"
+        android:src="@drawable/top"
+        app:fabSize="mini"
+        app:tint="@color/white"
+        tools:alpha="1" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

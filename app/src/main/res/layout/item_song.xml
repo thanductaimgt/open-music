@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <ImageView
+        android:src="@mipmap/ic_launcher"
+        android:id="@+id/thumbImgView"
+        android:layout_width="60dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/playAnimView"
+        android:layout_width="48dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="@id/thumbImgView"
+        app:layout_constraintStart_toStartOf="@id/thumbImgView"
+        app:layout_constraintTop_toTopOf="@id/thumbImgView"
+        app:lottie_rawRes="@raw/play"
+        app:lottie_speed="-1" />
+
+    <FrameLayout
+        android:id="@+id/titleLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toTopOf="@id/artistTextView"
+        app:layout_constraintEnd_toStartOf="@id/shareButton"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@id/thumbImgView"
+        app:layout_constraintTop_toTopOf="@id/thumbImgView"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <TextView
+            android:id="@+id/titleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="?colorOnBackground"
+            android:textSize="14sp"
+            tools:text="How You Like That" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/artistTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="12sp"
+        android:textStyle="bold|italic"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
+        app:layout_constraintEnd_toStartOf="@id/shareButton"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="@id/titleLayout"
+        app:layout_constraintTop_toBottomOf="@id/titleLayout"
+        tools:text="BlackPink" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/durationLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="?colorOnBackground"
+        app:cardCornerRadius="4dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/durationTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="4dp"
+            android:textColor="?colorOnPrimary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            tools:text="3:01" />
+    </androidx.cardview.widget.CardView>
+
+    <ImageView
+        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
+        android:id="@+id/downloadButton"
+        android:layout_width="28dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="3dp"
+        android:src="@drawable/download"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="1" />
+
+    <ImageView
+        android:layout_marginEnd="4dp"
+        android:id="@+id/shareButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="3dp"
+        android:src="@android:drawable/ic_menu_share"
+        app:layout_constraintBottom_toBottomOf="@id/downloadButton"
+        app:layout_constraintDimensionRatio="W,1:1"
+        app:layout_constraintEnd_toStartOf="@id/downloadButton"
+        app:layout_constraintTop_toTopOf="@id/downloadButton"
+        app:tint="?colorOnBackground" />
+
+    <SeekBar
+        android:max="1000"
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/artistTextView"
+        tools:visibility="visible" />
+</androidx.constraintlayout.widget.ConstraintLayout>
