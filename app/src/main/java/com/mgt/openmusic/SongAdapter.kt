@@ -16,7 +16,6 @@ import kotlinx.android.synthetic.main.item_song.view.*
 
 class SongAdapter(
     private val clickListener: (view: View, position: Int) -> Any?,
-    private val playingMedia: MainActivity.PlayingMedia,
     private val seekBarProgressListener: (progress: Float) -> Any?
 ) :
     RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
@@ -50,9 +49,6 @@ class SongAdapter(
                         progress: Int,
                         fromUser: Boolean
                     ) {
-//                        if(fromUser){
-//                            seekBarProgressListener(progress)
-//                        }
                     }
 
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -67,37 +63,62 @@ class SongAdapter(
                 })
             }
 
-            bindPlayState(playingMedia.state)
+            bindPlayState(song.state, true)
         }
 
         private fun bindPlayState(
             state: Int,
-            bindPlayAnimView: Boolean = true
+            bindPlayAnimView: Boolean = false
         ) {
             itemView.apply {
                 when (state) {
-                    MainActivity.PlayingMedia.STATE_PLAYING -> {
-                        titleTextView.ellipsize = TextUtils.TruncateAt.MARQUEE
-                        titleTextView.isSelected = true
-                        seekBar.visibility = View.VISIBLE
+                    Song.STATE_PREPARING -> {
+                        titleTextView.ellipsize = TextUtils.TruncateAt.END
+                        seekBar.visibility = View.GONE
+                        seekBar.progress = 0
+                        loadingAnimView.visibility = View.VISIBLE
                         if (bindPlayAnimView) {
                             playAnimView.speed = 1f
                             playAnimView.progress = 1f
                         }
                     }
-                    MainActivity.PlayingMedia.STATE_PAUSED -> {
-                        titleTextView.ellipsize = TextUtils.TruncateAt.END
+                    Song.STATE_PLAYING -> {
+                        titleTextView.ellipsize = TextUtils.TruncateAt.MARQUEE
+                        titleTextView.isSelected = true
+                        seekBar.visibility = View.VISIBLE
+                        loadingAnimView.visibility = View.INVISIBLE
                         if (bindPlayAnimView) {
-                            playAnimView.speed = -1f
+                            playAnimView.speed = 1f
+                            playAnimView.progress = 1f
+                        }
+                    }
+                    Song.STATE_PAUSED -> {
+                        titleTextView.ellipsize = TextUtils.TruncateAt.MARQUEE
+                        titleTextView.isSelected = true
+                        seekBar.visibility = View.VISIBLE
+                        loadingAnimView.visibility = View.INVISIBLE
+                        if (bindPlayAnimView) {
+                            playAnimView.speed = 1f
                             playAnimView.progress = 0f
                         }
                     }
-                    MainActivity.PlayingMedia.STATE_STOPPED -> {
+                    Song.STATE_IDLE -> {
                         titleTextView.ellipsize = TextUtils.TruncateAt.END
                         seekBar.visibility = View.GONE
                         seekBar.progress = 0
+                        loadingAnimView.visibility = View.INVISIBLE
                         if (bindPlayAnimView) {
-                            playAnimView.speed = -1f
+                            playAnimView.speed = 1f
+                            playAnimView.progress = 0f
+                        }
+                    }
+                    Song.STATE_COMPLETE -> {
+                        titleTextView.ellipsize = TextUtils.TruncateAt.END
+                        seekBar.visibility = View.VISIBLE
+                        seekBar.progress = 1000
+                        loadingAnimView.visibility = View.INVISIBLE
+                        if (bindPlayAnimView) {
+                            playAnimView.speed = 1f
                             playAnimView.progress = 0f
                         }
                     }
@@ -105,11 +126,25 @@ class SongAdapter(
             }
         }
 
-        fun play() {
+        fun prepare() {
             itemView.apply {
                 playAnimView.speed = 1f
                 playAnimView.playAnimation()
-                bindPlayState(MainActivity.PlayingMedia.STATE_PLAYING, false)
+                bindPlayState(Song.STATE_PREPARING)
+            }
+        }
+
+        fun play() {
+            itemView.apply {
+                bindPlayState(Song.STATE_PLAYING)
+            }
+        }
+
+        fun resume() {
+            itemView.apply {
+                playAnimView.speed = 1f
+                playAnimView.playAnimation()
+                bindPlayState(Song.STATE_PLAYING)
             }
         }
 
@@ -117,7 +152,7 @@ class SongAdapter(
             itemView.apply {
                 playAnimView.speed = -1f
                 playAnimView.playAnimation()
-                bindPlayState(MainActivity.PlayingMedia.STATE_PAUSED, false)
+                bindPlayState(Song.STATE_PAUSED)
             }
         }
 
@@ -125,7 +160,15 @@ class SongAdapter(
             itemView.apply {
                 playAnimView.speed = -1f
                 playAnimView.playAnimation()
-                bindPlayState(MainActivity.PlayingMedia.STATE_STOPPED, false)
+                bindPlayState(Song.STATE_IDLE)
+            }
+        }
+
+        fun complete() {
+            itemView.apply {
+                playAnimView.speed = -1f
+                playAnimView.playAnimation()
+                bindPlayState(Song.STATE_COMPLETE)
             }
         }
 

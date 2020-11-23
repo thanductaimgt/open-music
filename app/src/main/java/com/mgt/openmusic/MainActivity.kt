@@ -46,24 +46,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.downloadButton -> downloadSong(song)
             R.id.shareButton -> shareSong(song)
             R.id.thumbImgView -> {
-                when (playingMedia.state) {
-                    PlayingMedia.STATE_PLAYING, PlayingMedia.STATE_PREPARING -> {
-                        if (song == playingMedia.playingSong) {
-                            pauseSong(position)
-                        } else {
-                            stopSong()
-                            playSong(position)
-                        }
+                when (song.state) {
+                    Song.STATE_PLAYING, Song.STATE_PREPARING -> {
+                        pauseSong(position)
                     }
-                    PlayingMedia.STATE_PAUSED -> {
-                        if (song == playingMedia.playingSong) {
-                            resumeSong(position)
-                        } else {
-                            stopSong()
-                            playSong(position)
-                        }
+                    Song.STATE_PAUSED -> {
+                        resumeSong(position)
                     }
-                    PlayingMedia.STATE_STOPPED -> playSong(position)
+                    Song.STATE_IDLE -> {
+                        stopSong()
+                        playSong(position)
+                    }
+                    Song.STATE_COMPLETE -> {
+                        replaySong()
+                    }
                 }
             }
         }
@@ -88,7 +84,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private var isTopButtonShown = false
 
-    private val playingMedia = PlayingMedia()
+    private val focusedMedia = SongMedia()
 
     private var firstSearch = true
     private val searchCallback = object : Callback<String> {
@@ -120,22 +116,30 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var mediaPlayer: MediaPlayer? = null
     private var timer: Timer? = null
     private val prepareListener = MediaPlayer.OnPreparedListener {
-        logD(TAG, "source prepared, offset: ${playingMedia.progress}, duration: ${it.duration}")
-        playingMedia.duration = it.duration
-        it.seekTo((playingMedia.progress * playingMedia.duration).toInt())
-        if (playingMedia.state == PlayingMedia.STATE_PREPARING) {
+        logD(TAG, "source prepared, offset: ${focusedMedia.progress}")
+        it.seekTo((focusedMedia.progress * focusedMedia.duration * 1000).toInt())
+        if (focusedMedia.state == Song.STATE_PREPARING) {
             it.start()
             startTimer()
-            playingMedia.state = PlayingMedia.STATE_PLAYING
+            focusedMedia.position?.let { position -> getHolder(position)?.play() }
+            focusedMedia.state = Song.STATE_PLAYING
         }
+    }
+    private val completeListener = MediaPlayer.OnCompletionListener {
+        logD(TAG, "song completed: ${focusedMedia.position}")
+        focusedMedia.position?.let { position ->
+            getHolder(position)?.complete()
+        }
+        focusedMedia.state = Song.STATE_COMPLETE
+        stopTimer()
     }
 
     private val seekBarProgressListener = { progress: Float ->
-        if (playingMedia.state == PlayingMedia.STATE_PLAYING || playingMedia.state == PlayingMedia.STATE_PAUSED) {
-            val offset = (progress / 100f * playingMedia.duration).toInt()
+        if (focusedMedia.state == Song.STATE_PLAYING || focusedMedia.state == Song.STATE_PAUSED) {
+            val offset = (progress / 100f * focusedMedia.duration * 1000).toInt()
             mediaPlayer?.seekTo(offset)
         } else {
-            playingMedia.progress = progress / 100f
+            focusedMedia.progress = progress / 100f
         }
     }
 
@@ -183,7 +187,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun initView() {
-        adapter = SongAdapter(adapterClickListener, playingMedia, seekBarProgressListener)
+        adapter = SongAdapter(adapterClickListener, seekBarProgressListener)
         recyclerView.adapter = adapter
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -234,15 +238,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     .build()
             )
             setOnPreparedListener(prepareListener)
+            setOnCompletionListener(completeListener)
         }
-        if (playingMedia.state == PlayingMedia.STATE_PAUSED) {
-            playSong(progress = playingMedia.progress)
+        if (focusedMedia.state == Song.STATE_PAUSED) {
+            playSong(progress = focusedMedia.progress)
         }
     }
 
     override fun onStop() {
         super.onStop()
-        if (playingMedia.state == PlayingMedia.STATE_PLAYING || playingMedia.state == PlayingMedia.STATE_PREPARING) {
+        if (focusedMedia.state == Song.STATE_PLAYING || focusedMedia.state == Song.STATE_PREPARING) {
             pauseSong()
         }
         mediaPlayer?.release()
@@ -280,15 +285,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         startActivity(shareIntent)
     }
 
-    private fun playSong(position: Int? = playingMedia.playingPosition, progress: Float = 0f) {
+    private fun playSong(position: Int? = focusedMedia.position, progress: Float = 0f) {
         logD(TAG, "playSong: $position")
         position?.let {
-            getHolder(it)?.play()
+            getHolder(it)?.prepare()
             adapter.songs[it].let { song ->
-                playingMedia.playingPosition = position
-                playingMedia.playingSong = song
-                playingMedia.state = PlayingMedia.STATE_PREPARING
-                playingMedia.progress = progress
+                focusedMedia.position = position
+                focusedMedia.song = song
+                focusedMedia.state = Song.STATE_PREPARING
+                focusedMedia.progress = progress
                 mediaPlayer?.apply {
                     setDataSource(song.url)
                     prepareAsync()
@@ -297,11 +302,52 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun resumeSong(position: Int? = playingMedia.playingPosition) {
+    private fun resumeSong(position: Int? = focusedMedia.position) {
         logD(TAG, "resumeSong: $position")
-        position?.let { getHolder(it)?.play() }
+        position?.let { getHolder(it)?.resume() }
         mediaPlayer?.start()
-        playingMedia.state = PlayingMedia.STATE_PLAYING
+        focusedMedia.state = Song.STATE_PLAYING
+        startTimer()
+    }
+
+    private fun pauseSong(
+        position: Int? = focusedMedia.position
+    ) {
+        logD(TAG, "pauseSong: $position")
+        focusedMedia.progress =
+            (mediaPlayer?.currentPosition ?: 0) / (focusedMedia.duration * 1000f)
+        position?.let {
+            getHolder(it)?.pause()
+        }
+        mediaPlayer?.pause()
+        focusedMedia.state = Song.STATE_PAUSED
+        stopTimer()
+    }
+
+    private fun stopSong(
+        position: Int? = focusedMedia.position,
+    ) {
+        logD(TAG, "stopSong: $position")
+        position?.let {
+            getHolder(it)?.stop()
+        }
+        mediaPlayer?.reset()
+        focusedMedia.reset()
+        stopTimer()
+    }
+
+    private fun replaySong(
+        position: Int? = focusedMedia.position,
+    ) {
+        logD(TAG, "replaySong: $position")
+        position?.let {
+            getHolder(it)?.apply {
+                seekBar().progress = 0
+                resume()
+            }
+        }
+        focusedMedia.state = Song.STATE_PLAYING
+        mediaPlayer?.start()
         startTimer()
     }
 
@@ -311,12 +357,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             it.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread {
-                        playingMedia.playingPosition?.let { position ->
+                        focusedMedia.position?.let { position ->
                             (recyclerView.findViewHolderForAdapterPosition(position) as SongAdapter.SongViewHolder?)?.let { holder ->
-                                if (playingMedia.state == PlayingMedia.STATE_PLAYING) {
+                                if (focusedMedia.state == Song.STATE_PLAYING) {
                                     mediaPlayer?.let { player ->
                                         holder.seekBar().progress =
-                                            1000 * player.currentPosition / playingMedia.duration
+                                            player.currentPosition / focusedMedia.duration
                                     } ?: logE(TAG, "mediaPlayer null")
                                 }
                             } ?: logE(TAG, "holder null")
@@ -330,32 +376,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun stopTimer() {
         timer?.cancel()
         timer = null
-    }
-
-    private fun pauseSong(
-        position: Int? = playingMedia.playingPosition
-    ) {
-        logD(TAG, "pauseSong: $position")
-        playingMedia.progress =
-            (mediaPlayer?.currentPosition ?: 0).toFloat() / playingMedia.duration
-        position?.let {
-            getHolder(it)?.pause()
-        }
-        mediaPlayer?.pause()
-        playingMedia.state = PlayingMedia.STATE_PAUSED
-        stopTimer()
-    }
-
-    private fun stopSong(
-        position: Int? = playingMedia.playingPosition,
-    ) {
-        logD(TAG, "stopSong: $position")
-        position?.let {
-            getHolder(it)?.stop()
-        }
-        mediaPlayer?.reset()
-        playingMedia.reset()
-        stopTimer()
     }
 
     private fun getHolder(position: Int): SongAdapter.SongViewHolder? {
@@ -387,7 +407,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun search(text: String) {
         adapter.songs.clear()
         adapter.notifyDataSetChanged()
-        playingMedia.reset()
+        focusedMedia.reset()
         mediaPlayer?.reset()
         hideEmptyView()
         loadingAnimView.visibility = View.VISIBLE
@@ -411,26 +431,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    data class PlayingMedia(
-        var playingSong: Song? = null,
-        var playingPosition: Int? = null,
+    data class SongMedia(
+        var song: Song? = null,
+        var position: Int? = null,
         var progress: Float = 0f, // 0->1
-        var duration: Int = -1,
-        var state: Int = STATE_STOPPED
     ) {
-        fun reset() {
-            playingSong = null
-            playingPosition = null
-            duration = -1
-            progress = 0f
-            state = STATE_STOPPED
-        }
+        var state: Int = song?.state ?: Song.STATE_IDLE
+            get() = song?.state ?: Song.STATE_IDLE
+            set(value) {
+                song?.state = value
+                field = value
+            }
 
-        companion object {
-            const val STATE_PLAYING = 0
-            const val STATE_PAUSED = 1
-            const val STATE_STOPPED = 2
-            const val STATE_PREPARING = 3
+        val duration: Int
+            get() = song?.duration ?: -1
+
+        fun reset() {
+            state = Song.STATE_IDLE
+            song = null
+            position = null
+            progress = 0f
         }
     }
 }

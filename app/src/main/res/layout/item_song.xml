@@ -7,13 +7,13 @@
     android:padding="8dp">
 
     <ImageView
-        android:src="@mipmap/ic_launcher"
         android:id="@+id/thumbImgView"
         android:layout_width="60dp"
         android:layout_height="0dp"
+        android:src="@mipmap/ic_launcher"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/playAnimView"
@@ -26,6 +26,19 @@
         app:layout_constraintTop_toTopOf="@id/thumbImgView"
         app:lottie_rawRes="@raw/play"
         app:lottie_speed="-1" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/loadingAnimView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
+        app:layout_constraintEnd_toEndOf="@id/thumbImgView"
+        app:layout_constraintStart_toStartOf="@id/thumbImgView"
+        app:layout_constraintTop_toTopOf="@id/thumbImgView"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/loading_circle" />
 
     <FrameLayout
         android:id="@+id/titleLayout"
@@ -44,8 +57,8 @@
             android:id="@+id/titleTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:marqueeRepeatLimit="marquee_forever"
             android:ellipsize="end"
+            android:marqueeRepeatLimit="marquee_forever"
             android:singleLine="true"
             android:textColor="?colorOnBackground"
             android:textSize="14sp"
@@ -74,9 +87,9 @@
         android:id="@+id/durationLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         app:cardBackgroundColor="?colorOnBackground"
         app:cardCornerRadius="4dp"
-        android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -92,22 +105,22 @@
     </androidx.cardview.widget.CardView>
 
     <ImageView
-        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
         android:id="@+id/downloadButton"
         android:layout_width="28dp"
         android:layout_height="0dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="3dp"
         android:src="@drawable/download"
+        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="1" />
 
     <ImageView
-        android:layout_marginEnd="4dp"
         android:id="@+id/shareButton"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginEnd="4dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="3dp"
         android:src="@android:drawable/ic_menu_share"
@@ -118,11 +131,11 @@
         app:tint="?colorOnBackground" />
 
     <SeekBar
-        android:max="1000"
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
+        android:max="1000"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/artistTextView"
         tools:visibility="visible" />
