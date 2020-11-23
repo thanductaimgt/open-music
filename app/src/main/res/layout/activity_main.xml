@@ -9,10 +9,10 @@
 
     <ImageView
         android:id="@+id/logoBg"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginHorizontal="50dp"
+        android:layout_margin="50dp"
         android:adjustViewBounds="true"
         android:scaleType="fitXY"
         android:src="@drawable/logo"
@@ -49,14 +49,14 @@
                     app:layout_constraintTop_toTopOf="parent">
 
                     <EditText
-                        android:text="mưa thùy chi"
-                        android:paddingHorizontal="45dp"
                         android:id="@+id/searchEditText"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:background="@null"
                         android:hint="@string/search_hint"
                         android:inputType="text"
+                        android:paddingHorizontal="45dp"
+                        android:text="mưa thùy chi"
                         android:textAlignment="center" />
 
                     <ImageView
@@ -86,9 +86,9 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:paddingBottom="8dp"
                 android:layout_height="match_parent"
                 android:layout_marginBottom="68dp"
+                android:paddingBottom="8dp"
                 tools:context=".MainActivity">
 
                 <ImageView
@@ -131,15 +131,15 @@
                     app:layout_constraintTop_toTopOf="@id/appNameTextView" />
 
                 <TextView
-                    android:letterSpacing="0.1"
-                    android:layout_marginTop="4dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:letterSpacing="0.1"
                     android:text="@string/app_desc"
-                    app:layout_constraintTop_toBottomOf="@id/appNameTextView"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constrainedWidth="true"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constrainedWidth="true"/>
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/appNameTextView" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
@@ -160,11 +160,15 @@
 
         <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/loadingAnimView"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0"
             app:lottie_autoPlay="true"
             app:lottie_loop="true"
             app:lottie_rawRes="@raw/loading_list" />

@@ -51,3 +51,9 @@ fun logE(tag: String, message: String) {
 
 val Any.TAG: String
     get() = this::class.java.simpleName
+
+fun Throwable.print() {
+    if (BuildConfig.DEBUG) {
+        printStackTrace()
+    }
+}
