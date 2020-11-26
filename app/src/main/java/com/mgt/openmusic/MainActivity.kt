@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -17,18 +18,26 @@ import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.AppBarLayout
+import com.mgt.openmusic.rxjava.MyStreamObserver
+import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.math.max
+import kotlin.math.min
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var adapter: SongAdapter
+    private lateinit var layoutManager: LinearLayoutManager
 
     private val adapterClickListener = { view: View, position: Int ->
         val song = adapter.songs[position]
         when (view.id) {
-            R.id.downloadButton -> downloadSong(song)
+            R.id.downloadButton -> viewModel.downloadSong(
+                song,
+                DownloadSubscriber(position)
+            )
             R.id.shareButton -> shareSong(song)
             R.id.thumbImgView -> {
                 when (song.state) {
@@ -46,6 +55,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         replaySong()
                     }
                 }
+            }
+            R.id.openButton->{
+
+            }
+            R.id.cancelButton->{
+                cancelDownload(position)
             }
         }
     }
@@ -100,9 +115,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             super.onScrolled(recyclerView, dx, dy)
             rotateLogoBg(dy / 100f)
             Utils.hideKeyboard(this@MainActivity, rootView)
-            val lastPosition =
-                (recyclerView.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
-            if (lastPosition >= adapter.songs.size - 5) {
+            val lastPosition = layoutManager.findLastVisibleItemPosition()
+            if (lastPosition >= adapter.songs.size - 5 && !viewModel.isLoadingMore && viewModel.lastResponseSongsSize > 0) {
+                loadMoreAnimView.visibility = View.VISIBLE
                 viewModel.loadMoreSongs()
             }
         }
@@ -160,7 +175,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun initView() {
-        adapter = SongAdapter(adapterClickListener, seekBarProgressListener)
+        layoutManager = recyclerView.layoutManager as LinearLayoutManager
+        adapter = SongAdapter(adapterClickListener, seekBarProgressListener, viewModel.focusedMedia)
         recyclerView.adapter = adapter
         recyclerView.addOnScrollListener(scrollListener)
 
@@ -168,22 +184,38 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         topButton.setOnClickListener(this)
         historyButton.setOnClickListener(this)
 
-        searchEditText.setOnFocusChangeListener { _, b ->
-            if (b) {
-                searchEditText.post {
-                    Utils.showKeyboard(this, searchEditText)
+        searchEditText.apply {
+            setOnFocusChangeListener { _, b ->
+                if (b) {
+                    searchEditText.post {
+                        Utils.showKeyboard(this@MainActivity, searchEditText)
+                    }
+                } else {
+                    Utils.hideKeyboard(this@MainActivity, rootView)
                 }
-            } else {
-                Utils.hideKeyboard(this, rootView)
             }
+            setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    search()
+                    true
+                } else {
+                    false
+                }
+            }
+            requestFocus()
         }
-        searchEditText.requestFocus()
+
+        appBar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { _, verticalOffset ->
+            titleLayout.alpha = 1 - min(1f, -verticalOffset.toFloat() / toolBar.minimumHeight)
+        })
     }
 
     private fun observeEvents() {
         viewModel.liveEvent.observe(this, {
+            logD(TAG, "Receive event: $it")
             when (it) {
                 is PlayEvent -> getHolder(it.position)?.play()
+                is UpdateDurationEvent -> getHolder(it.position)?.bindDuration(adapter.songs[it.position])
                 is CompleteEvent -> getHolder(it.position)?.complete()
                 is SearchSuccess -> {
                     loadingAnimView.visibility = View.INVISIBLE
@@ -192,6 +224,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     loadingAnimView.visibility = View.INVISIBLE
                     showEmptyView()
                 }
+                is LoadMoreSuccess, LoadMoreFail -> {
+                    loadMoreAnimView.visibility = View.INVISIBLE
+                }
                 is TimerUpdate -> {
                     viewModel.apply {
                         focusedMedia.position?.let { position ->
@@ -199,6 +234,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 if (focusedMedia.state == Song.STATE_PLAYING) {
                                     holder.seekBar().progress =
                                         mediaPlayer.currentPosition / focusedMedia.duration
+                                    focusedMedia.progress = holder.seekBar().progress / 1000f
                                 }
                             } ?: logE(TAG, "holder null")
                         } ?: logE(TAG, "playingPosition null")
@@ -234,10 +270,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 //        }
 //    }
 
-//    override fun onDestroy() {
-//        super.onDestroy()
-//    }
-
     private fun rotateLogoBg(degree: Float) {
         logoBg.rotation += degree
     }
@@ -254,10 +286,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         showAnim.start()
     }
 
-    private fun downloadSong(song: Song) {
-        Toast.makeText(this, "Not impl yet", Toast.LENGTH_SHORT).show()
-    }
-
     private fun shareSong(song: Song) {
         val sendIntent: Intent = Intent().apply {
             action = Intent.ACTION_SEND
@@ -267,6 +295,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         val shareIntent = Intent.createChooser(sendIntent, null)
         startActivity(shareIntent)
+    }
+
+    private fun cancelDownload(position: Int){
+        viewModel.downloadDisposableMap[position]?.dispose()
+        viewModel.downloadDisposableMap.remove(position)
     }
 
     private fun playSong(position: Int? = viewModel.focusedMedia.position, progress: Float = 0f) {
@@ -354,31 +387,45 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.searchButton -> {
-                searchEditText.text.takeIf { !TextUtils.isEmpty(it) }?.let {
-                    if (viewModel.firstSearch) {
-                        viewModel.firstSearch = false
-                        ObjectAnimator().apply {
-                            duration = 400
-                            setPropertyName("alpha")
-                            setFloatValues(0.6f, 0.2f)
-                            target = logoBg
-                        }.start()
-                    }
-                    search(it.toString())
-                }
+                search()
             }
-            R.id.topButton -> recyclerView.smoothScrollToPosition(0)
+            R.id.topButton -> {
+                if (layoutManager.findLastVisibleItemPosition() < 50) {
+                    recyclerView.smoothScrollToPosition(0)
+                } else {
+                    recyclerView.scrollToPosition(0)
+                    hide(topButton)
+                }
+                appBar.setExpanded(true)
+            }
             R.id.historyButton -> {
             }
         }
     }
 
-    private fun search(text: String) {
-        adapter.songs.clear()
-        adapter.notifyDataSetChanged()
-        hideEmptyView()
-        loadingAnimView.visibility = View.VISIBLE
-        viewModel.search(text)
+    private fun search() {
+        searchEditText.text.takeIf { !TextUtils.isEmpty(it) }?.toString()?.let { keyword ->
+            logD(TAG, "search keyword: $keyword")
+            if (viewModel.firstSearch) {
+                viewModel.firstSearch = false
+                ObjectAnimator().apply {
+                    duration = 400
+                    setPropertyName("alpha")
+                    setFloatValues(0.6f, 0.2f)
+                    target = logoBg
+                }.start()
+            }
+
+            adapter.songs.clear()
+            adapter.notifyDataSetChanged()
+
+            hideEmptyView()
+            loadingAnimView.visibility = View.VISIBLE
+
+            viewModel.stopTimer()
+
+            viewModel.searchSongs(keyword)
+        }
     }
 
     private fun setLightStatusBar(view: View) {
@@ -394,6 +441,36 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val window = window
             window.statusBarColor = Color.BLACK
+        }
+    }
+
+    inner class DownloadSubscriber(private val position: Int) :
+        MyStreamObserver<DownloadEmitItem>(viewModel.compositeDisposable) {
+        override fun onSubscribe(d: Disposable) {
+            super.onSubscribe(d)
+            logD(TAG, "onSubscribe: position: $position")
+            viewModel.downloadDisposableMap[position] = d
+            getHolder(position)?.startDownload()
+        }
+
+        override fun onNext(t: DownloadEmitItem) {
+            logD(TAG, "onError: position: $position, progress: ${t.progress}")
+            getHolder(position)?.updateProgress(t.progress)
+        }
+
+        override fun onComplete() {
+            super.onComplete()
+            logD(TAG, "onComplete: position: $position")
+            viewModel.downloadDisposableMap.remove(position)
+            getHolder(position)?.finishDownload(true)
+        }
+
+        override fun onError(t: Throwable) {
+            super.onError(t)
+            logD(TAG, "onError: position: $position")
+            viewModel.downloadDisposableMap.remove(position)
+            getHolder(position)?.finishDownload(false)
+            Toast.makeText(this@MainActivity, "A download fail", Toast.LENGTH_SHORT).show()
         }
     }
 }

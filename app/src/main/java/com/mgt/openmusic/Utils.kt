@@ -1,9 +1,15 @@
 package com.mgt.openmusic
 
 import android.content.Context
+import android.content.res.Resources.Theme
 import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
+import androidx.lifecycle.MutableLiveData
+
 
 object Utils {
     fun getDurationFormat(duration: Int): String {
@@ -35,6 +41,13 @@ object Utils {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
+
+    @ColorInt
+    fun getAttrColor(theme: Theme, @AttrRes attr:Int): Int{
+        val typedValue = TypedValue()
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
+    }
 }
 
 fun logD(tag: String, message: String) {
@@ -56,4 +69,8 @@ fun Throwable.print() {
     if (BuildConfig.DEBUG) {
         printStackTrace()
     }
+}
+
+fun <T> MutableLiveData<T>.notifyObservers() {
+    value = value
 }

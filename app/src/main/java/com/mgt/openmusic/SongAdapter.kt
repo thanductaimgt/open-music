@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
@@ -16,7 +17,8 @@ import kotlinx.android.synthetic.main.item_song.view.*
 
 class SongAdapter(
     private val clickListener: (view: View, position: Int) -> Any?,
-    private val seekBarProgressListener: (progress: Float) -> Any?
+    private val seekBarProgressListener: (progress: Float) -> Any?,
+    private val focusedMedia: MainViewModel.SongMedia,
 ) :
     RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
     var songs = ArrayList<Song>()
@@ -27,7 +29,11 @@ class SongAdapter(
             itemView.apply {
                 titleTextView.text = song.title
                 artistTextView.text = song.artist
-                durationTextView.text = Utils.getDurationFormat(song.duration)
+
+                bindDuration(song)
+                if (focusedMedia.song == song) {
+                    seekBar.progress = (focusedMedia.progress * 1000).toInt()
+                }
 
                 val requestOptions = RequestOptions().transforms(CenterCrop(), RoundedCorners(45))
                 Glide.with(context).let {
@@ -41,6 +47,8 @@ class SongAdapter(
                     .into(thumbImgView)
 
                 downloadButton.setOnClickListener { clickListener(downloadButton, position) }
+                openButton.setOnClickListener { clickListener(openButton, position) }
+                cancelButton.setOnClickListener { clickListener(cancelButton, position) }
                 shareButton.setOnClickListener { clickListener(shareButton, position) }
                 thumbImgView.setOnClickListener { clickListener(thumbImgView, position) }
                 seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -64,6 +72,23 @@ class SongAdapter(
             }
 
             bindPlayState(song.state, true)
+        }
+
+        fun bindDuration(song: Song) {
+            itemView.apply {
+                if (song.duration > 0) {
+                    durationTextView.text = Utils.getDurationFormat(song.duration)
+                    durationTextView.setTextColor(
+                        Utils.getAttrColor(
+                            context.theme,
+                            R.attr.colorOnPrimary
+                        )
+                    )
+                } else {
+                    durationTextView.text = context.getString(R.string.unknown)
+                    durationTextView.setTextColor(ContextCompat.getColor(context, R.color.error))
+                }
+            }
         }
 
         private fun bindPlayState(
@@ -169,6 +194,41 @@ class SongAdapter(
                 playAnimView.speed = -1f
                 playAnimView.playAnimation()
                 bindPlayState(Song.STATE_COMPLETE)
+            }
+        }
+
+        fun startDownload() {
+            itemView.apply {
+                cancelButton.visibility = View.VISIBLE
+                downloadButton.visibility = View.INVISIBLE
+                openButton.visibility = View.INVISIBLE
+                downloadProgressBar.visibility = View.VISIBLE
+                downloadProgressBar.progress = 0
+                downloadButton.setImageResource(R.drawable.cancel)
+            }
+        }
+
+        fun updateProgress(progress: Int) {
+            itemView.apply {
+                downloadProgressBar.progress = progress
+            }
+        }
+
+        fun finishDownload(isSuccess: Boolean) {
+            itemView.apply {
+                downloadProgressBar.visibility = View.GONE
+                cancelButton.visibility = View.INVISIBLE
+                downloadButton.setImageResource(
+                    if (isSuccess) {
+                        downloadButton.visibility = View.INVISIBLE
+                        openButton.visibility = View.VISIBLE
+                        R.drawable.downloaded
+                    } else {
+                        downloadButton.visibility = View.VISIBLE
+                        openButton.visibility = View.INVISIBLE
+                        R.drawable.download
+                    }
+                )
             }
         }
 

@@ -5,7 +5,8 @@
     android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="34dp">
+    android:clipToPadding="false"
+    android:paddingTop="34dp">
 
     <ImageView
         android:id="@+id/logoBg"
@@ -25,6 +26,7 @@
         android:background="@null">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/toolBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:colorBackground"
@@ -49,6 +51,8 @@
                     app:layout_constraintTop_toTopOf="parent">
 
                     <EditText
+                        android:text="thùy chi"
+                        android:imeOptions="actionSearch"
                         android:id="@+id/searchEditText"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
@@ -56,7 +60,6 @@
                         android:hint="@string/search_hint"
                         android:inputType="text"
                         android:paddingHorizontal="45dp"
-                        android:text="mưa thùy chi"
                         android:textAlignment="center" />
 
                     <ImageView
@@ -79,12 +82,14 @@
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="9dp"
                         android:src="@drawable/history"
+                        android:visibility="invisible"
                         app:tint="?colorOnBackground" />
                 </androidx.cardview.widget.CardView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/titleLayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginBottom="68dp"
@@ -154,6 +159,9 @@
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingBottom="60dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintTop_toTopOf="parent"
             tools:listitem="@layout/item_song" />
@@ -203,6 +211,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/emptyIcon"
             tools:visibility="visible" />
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/loadMoreAnimView"
+            android:layout_width="60dp"
+            android:layout_height="0dp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/loading_bubles"
+            app:lottie_speed="2"
+            tools:visibility="visible" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -210,11 +233,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:layout_margin="24dp"
+        android:layout_margin="16dp"
         android:alpha="0"
+        android:backgroundTint="#fad102"
         android:scaleType="fitCenter"
         android:src="@drawable/top"
         app:fabSize="mini"
-        app:tint="@color/white"
+        app:tint="@android:color/white"
         tools:alpha="1" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

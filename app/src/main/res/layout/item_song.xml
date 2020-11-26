@@ -83,26 +83,19 @@
         app:layout_constraintTop_toBottomOf="@id/titleLayout"
         tools:text="BlackPink" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/durationLayout"
+    <TextView
+        android:id="@+id/durationTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:cardBackgroundColor="?colorOnBackground"
-        app:cardCornerRadius="4dp"
+        android:background="@drawable/duration_bg"
+        android:paddingHorizontal="4dp"
+        android:textColor="?colorOnPrimary"
+        android:textSize="10sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/durationTextView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingHorizontal="4dp"
-            android:textColor="?colorOnPrimary"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            tools:text="3:01" />
-    </androidx.cardview.widget.CardView>
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="3:01" />
 
     <ImageView
         android:id="@+id/downloadButton"
@@ -115,6 +108,49 @@
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="1" />
+
+    <ImageView
+        android:id="@+id/cancelButton"
+        android:layout_width="28dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="3dp"
+        android:src="@drawable/cancel"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="1" />
+
+    <ImageView
+        android:id="@+id/openButton"
+        android:layout_width="28dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="3dp"
+        android:src="@drawable/downloaded"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/thumbImgView"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="1" />
+
+    <ProgressBar
+        android:progress="50"
+        android:indeterminate="false"
+        android:id="@+id/downloadProgressBar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/circle_shape"
+        android:progressDrawable="@drawable/circular_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:max="100"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/downloadButton"
+        app:layout_constraintEnd_toEndOf="@id/downloadButton"
+        app:layout_constraintStart_toStartOf="@id/downloadButton"
+        app:layout_constraintTop_toTopOf="@id/downloadButton"
+        tools:visibility="visible" />
 
     <ImageView
         android:id="@+id/shareButton"
