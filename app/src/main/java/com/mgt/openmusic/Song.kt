@@ -7,19 +7,7 @@ data class Song(
     val url: String,
     var duration: Int, //sec
     val album: Album? = null,
-    @Transient
-    var state: Int = STATE_IDLE,
-) {
-    companion object {
-        const val STATE_IDLE = 0
-        const val STATE_PREPARING = 1
-        const val STATE_PLAYING = 2
-        const val STATE_PAUSED = 3
-        const val STATE_COMPLETE = 4
-
-        const val PAYLOAD_PROGRESS = 10
-    }
-}
+)
 
 data class Album(
     val title: String? = null,

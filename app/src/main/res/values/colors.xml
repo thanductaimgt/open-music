@@ -9,7 +9,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="strongGray">#d6d6d6</color>
 
-    <color name="lightBg">#f5f5f5</color>
+    <color name="lightBg">#ebebeb</color>
     <color name="darkBg">#5c5c5c</color>
     <color name="error">#eb4034</color>
+    <color name="darkBgBold">#383838</color>
 </resources>

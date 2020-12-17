@@ -1,10 +1,8 @@
 package com.mgt.openmusic
 
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.SeekBar
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -16,14 +14,26 @@ import kotlinx.android.synthetic.main.item_song.view.*
 
 
 class SongAdapter(
-    private val clickListener: (view: View, position: Int) -> Any?,
-    private val seekBarProgressListener: (progress: Float) -> Any?,
-    private val focusedMedia: MainViewModel.SongMedia,
-) :
-    RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
+    private val clickListener: ClickListener
+) : RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
     var songs = ArrayList<Song>()
 
-    inner class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
+        return SongViewHolder(
+            LayoutInflater.from(parent.context).inflate(R.layout.item_song, parent, false)
+        )
+    }
+
+    override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
+        holder.bind(position)
+    }
+
+    override fun getItemCount(): Int {
+        return songs.size
+    }
+
+    inner class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
+        View.OnClickListener {
         fun bind(position: Int) {
             val song = songs[position]
             itemView.apply {
@@ -31,11 +41,7 @@ class SongAdapter(
                 artistTextView.text = song.artist
 
                 bindDuration(song)
-                if (focusedMedia.song == song) {
-                    seekBar.progress = (focusedMedia.progress * 1000).toInt()
-                }
 
-                val requestOptions = RequestOptions().transforms(CenterCrop(), RoundedCorners(45))
                 Glide.with(context).let {
                     song.album?.thumb?.photo_68?.let { url ->
                         it.load(url)
@@ -43,35 +49,29 @@ class SongAdapter(
                             .error(R.mipmap.ic_launcher)
                     } ?: it.load(R.mipmap.ic_launcher)
                 }.transition(DrawableTransitionOptions.withCrossFade(300))
-                    .apply(requestOptions)
+                    .apply(
+                        RequestOptions()
+                            .transform(CenterCrop())
+                            .transform(RoundedCorners(45))
+                    )
                     .into(thumbImgView)
 
-                downloadButton.setOnClickListener { clickListener(downloadButton, position) }
-                openButton.setOnClickListener { clickListener(openButton, position) }
-                cancelButton.setOnClickListener { clickListener(cancelButton, position) }
-                shareButton.setOnClickListener { clickListener(shareButton, position) }
-                thumbImgView.setOnClickListener { clickListener(thumbImgView, position) }
-                seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(
-                        seekBar: SeekBar?,
-                        progress: Int,
-                        fromUser: Boolean
-                    ) {
-                    }
-
-                    override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                        logD(TAG, "onStartTrackingTouch, progress: ${seekBar?.progress}")
-                    }
-
-                    override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                        logD(TAG, "onStopTrackingTouch, progress: ${seekBar?.progress}")
-                        // seekbar max progress = 1000 -> reduce loss when convert to player offset
-                        seekBar?.let { seekBarProgressListener(it.progress / 10f) }
-                    }
-                })
+                downloadButton.setOnClickListener(this@SongViewHolder)
+                openButton.setOnClickListener(this@SongViewHolder)
+                cancelButton.setOnClickListener(this@SongViewHolder)
+                shareButton.setOnClickListener(this@SongViewHolder)
+                setOnClickListener(this@SongViewHolder)
             }
+        }
 
-            bindPlayState(song.state, true)
+        override fun onClick(v: View?) {
+            when (v?.id) {
+                R.id.downloadButton -> clickListener.onDownload(adapterPosition)
+                R.id.shareButton -> clickListener.onShare(adapterPosition)
+                R.id.rootItemView -> clickListener.onPlay(adapterPosition)
+                R.id.openButton -> clickListener.onOpen(adapterPosition)
+                R.id.cancelButton -> clickListener.onCancel(adapterPosition)
+            }
         }
 
         fun bindDuration(song: Song) {
@@ -91,112 +91,6 @@ class SongAdapter(
             }
         }
 
-        private fun bindPlayState(
-            state: Int,
-            bindPlayAnimView: Boolean = false
-        ) {
-            itemView.apply {
-                when (state) {
-                    Song.STATE_PREPARING -> {
-                        titleTextView.ellipsize = TextUtils.TruncateAt.END
-                        seekBar.visibility = View.GONE
-                        seekBar.progress = 0
-                        loadingAnimView.visibility = View.VISIBLE
-                        if (bindPlayAnimView) {
-                            playAnimView.speed = 1f
-                            playAnimView.progress = 1f
-                        }
-                    }
-                    Song.STATE_PLAYING -> {
-                        titleTextView.ellipsize = TextUtils.TruncateAt.MARQUEE
-                        titleTextView.isSelected = true
-                        seekBar.visibility = View.VISIBLE
-                        loadingAnimView.visibility = View.INVISIBLE
-                        if (bindPlayAnimView) {
-                            playAnimView.speed = 1f
-                            playAnimView.progress = 1f
-                        }
-                    }
-                    Song.STATE_PAUSED -> {
-                        titleTextView.ellipsize = TextUtils.TruncateAt.MARQUEE
-                        titleTextView.isSelected = true
-                        seekBar.visibility = View.VISIBLE
-                        loadingAnimView.visibility = View.INVISIBLE
-                        if (bindPlayAnimView) {
-                            playAnimView.speed = 1f
-                            playAnimView.progress = 0f
-                        }
-                    }
-                    Song.STATE_IDLE -> {
-                        titleTextView.ellipsize = TextUtils.TruncateAt.END
-                        seekBar.visibility = View.GONE
-                        seekBar.progress = 0
-                        loadingAnimView.visibility = View.INVISIBLE
-                        if (bindPlayAnimView) {
-                            playAnimView.speed = 1f
-                            playAnimView.progress = 0f
-                        }
-                    }
-                    Song.STATE_COMPLETE -> {
-                        titleTextView.ellipsize = TextUtils.TruncateAt.END
-                        seekBar.visibility = View.VISIBLE
-                        seekBar.progress = 1000
-                        loadingAnimView.visibility = View.INVISIBLE
-                        if (bindPlayAnimView) {
-                            playAnimView.speed = 1f
-                            playAnimView.progress = 0f
-                        }
-                    }
-                }
-            }
-        }
-
-        fun prepare() {
-            itemView.apply {
-                playAnimView.speed = 1f
-                playAnimView.playAnimation()
-                bindPlayState(Song.STATE_PREPARING)
-            }
-        }
-
-        fun play() {
-            itemView.apply {
-                bindPlayState(Song.STATE_PLAYING)
-            }
-        }
-
-        fun resume() {
-            itemView.apply {
-                playAnimView.speed = 1f
-                playAnimView.playAnimation()
-                bindPlayState(Song.STATE_PLAYING)
-            }
-        }
-
-        fun pause() {
-            itemView.apply {
-                playAnimView.speed = -1f
-                playAnimView.playAnimation()
-                bindPlayState(Song.STATE_PAUSED)
-            }
-        }
-
-        fun stop() {
-            itemView.apply {
-                playAnimView.speed = -1f
-                playAnimView.playAnimation()
-                bindPlayState(Song.STATE_IDLE)
-            }
-        }
-
-        fun complete() {
-            itemView.apply {
-                playAnimView.speed = -1f
-                playAnimView.playAnimation()
-                bindPlayState(Song.STATE_COMPLETE)
-            }
-        }
-
         fun startDownload() {
             itemView.apply {
                 cancelButton.visibility = View.VISIBLE
@@ -205,12 +99,6 @@ class SongAdapter(
                 downloadProgressBar.visibility = View.VISIBLE
                 downloadProgressBar.progress = 0
                 downloadButton.setImageResource(R.drawable.cancel)
-            }
-        }
-
-        fun updateProgress(progress: Int) {
-            itemView.apply {
-                downloadProgressBar.progress = progress
             }
         }
 
@@ -231,23 +119,13 @@ class SongAdapter(
                 )
             }
         }
-
-        fun seekBar(): SeekBar {
-            return itemView.seekBar
-        }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
-        return SongViewHolder(
-            LayoutInflater.from(parent.context).inflate(R.layout.item_song, parent, false)
-        )
-    }
-
-    override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
-        holder.bind(position)
-    }
-
-    override fun getItemCount(): Int {
-        return songs.size
+    interface ClickListener {
+        fun onDownload(position: Int)
+        fun onOpen(position: Int)
+        fun onCancel(position: Int)
+        fun onShare(position: Int)
+        fun onPlay(position: Int)
     }
 }

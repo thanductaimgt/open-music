@@ -5,4 +5,5 @@
     <string name="search_hint">Search song, artist,&#8230;</string>
     <string name="empty_result">No result found</string>
     <string name="unknown">unknown</string>
+    <string name="downloaded_songs">Downloaded songs</string>
 </resources>

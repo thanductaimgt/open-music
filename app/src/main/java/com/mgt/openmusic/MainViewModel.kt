@@ -10,30 +10,29 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.mgt.openmusic.rxjava.MyCompletableObserver
 import com.mgt.openmusic.rxjava.MySingleObserver
-import com.mgt.openmusic.rxjava.MyStreamObserver
-import com.mgt.openmusic.rxjava.MyStreamSubscriber
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.*
-import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.CompletableEmitter
+import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import org.reactivestreams.Subscription
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
-import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.HashSet
+import kotlin.collections.LinkedHashSet
 
 class MainViewModel : ViewModel() {
     val liveEvent = SingleLiveEvent<Event>()
-    val liveSongs = MutableLiveData<ArrayList<Song>>()
+    val liveSongs = MutableLiveData<ArrayList<Song>>(ArrayList())
+    val liveSearchHistories = MutableLiveData<MutableSet<SearchHistory>>(LinkedHashSet())
     val compositeDisposable = CompositeDisposable()
     val compositeSubscription = CompositeSubscription()
     val downloadDisposableMap = HashMap<Int, Disposable>()
@@ -59,33 +58,30 @@ class MainViewModel : ViewModel() {
     var isStartAnimRun = false
 
     var isLoadingMore = false
+    var isSearching = false
     var lastResponseSongsSize = 0
 
     private val prepareListener = MediaPlayer.OnPreparedListener {
         if (focusedMedia.duration <= 0) {
             focusedMedia.duration = it.duration / 1000
-            focusedMedia.position?.let { position ->
-                liveEvent.value = UpdateDurationEvent(position)
-            }
+            liveEvent.value = UpdateDurationEvent(focusedMedia.duration)
         }
         logD(TAG, "source prepared, offset: ${focusedMedia.progress}")
         it.seekTo((focusedMedia.progress * focusedMedia.duration * 1000).toInt())
-        if (focusedMedia.state == Song.STATE_PREPARING) {
+        if (focusedMedia.playState == SongPlayView.PlayState.STATE_PREPARING) {
             it.start()
             startTimer()
-            focusedMedia.position?.let { position ->
-                liveEvent.value = PlayEvent(position)
+            focusedMedia.song?.let { song ->
+                liveEvent.value = PlayEvent(song)
             }
-            focusedMedia.state = Song.STATE_PLAYING
+            focusedMedia.playState = SongPlayView.PlayState.STATE_PLAYING
         }
     }
 
     private val completeListener = MediaPlayer.OnCompletionListener {
-        logD(TAG, "song completed: ${focusedMedia.position}")
-        focusedMedia.position?.let { position ->
-            liveEvent.value = CompleteEvent(position)
-        }
-        focusedMedia.state = Song.STATE_COMPLETE
+        logD(TAG, "song completed")
+        liveEvent.value = CompleteEvent
+        focusedMedia.playState = SongPlayView.PlayState.STATE_COMPLETE
         stopTimer()
     }
 
@@ -97,6 +93,7 @@ class MainViewModel : ViewModel() {
                 liveEvent.value = SearchSuccess(result)
                 liveSongs.value = result
                 lastResponseSongsSize = result.size
+                isSearching = false
             } catch (t: Throwable) {
                 onError(t)
             }
@@ -106,6 +103,7 @@ class MainViewModel : ViewModel() {
             super.onError(t)
             liveEvent.value = SearchFail
             lastResponseSongsSize = 0
+            isSearching = false
         }
     }
 
@@ -150,6 +148,7 @@ class MainViewModel : ViewModel() {
 
     init {
         initMediaPlayer()
+        loadSearchHistories()
     }
 
     private fun initMediaPlayer() {
@@ -182,10 +181,18 @@ class MainViewModel : ViewModel() {
     }
 
     fun searchSongs(keyword: String) {
-        focusedMedia.reset()
-        mediaPlayer.reset()
+        isSearching = true
         params["q"] = keyword
         params["page"] = "0"
+
+        // save to permanent
+
+        liveSearchHistories.value?.apply {
+            val searchHistory = SearchHistory(keyword)
+            remove(searchHistory)
+            add(searchHistory)
+            liveSearchHistories.notifyObservers()
+        }
 
         Single.fromCallable {
             parseSongs(service.search(params).execute())
@@ -194,18 +201,15 @@ class MainViewModel : ViewModel() {
             .subscribe(searchObserver)
     }
 
-    fun downloadSong(song: Song, observer: MyStreamObserver<DownloadEmitItem>) {
-        Observable.create<DownloadEmitItem> { emitter ->
+    fun downloadSong(song: Song, observer: MyCompletableObserver) {
+        Completable.create { emitter ->
             downloadSongInternal(song, emitter)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(observer)
     }
 
-    private fun downloadSongInternal(
-        song: Song,
-        emitter: ObservableEmitter<DownloadEmitItem>
-    ) {
+    private fun downloadSongInternal(song: Song, emitter: CompletableEmitter) {
         MyApp.context.apply {
             val relativeLocation: String = Environment.DIRECTORY_MUSIC
 
@@ -231,26 +235,11 @@ class MainViewModel : ViewModel() {
                 val response = service.downloadAudio(song.url).execute()
                 input = response.body()!!.byteStream()
 
-                val totalSize = response.body()!!.contentLength()
-                var curSize = 0L
-                var lastProgress = 0
-
                 val data = ByteArray(4096)
                 var count = input.read(data)
 
                 while (count != -1) {
                     output.write(data, 0, count)
-                    curSize += count
-                    val curProgress = (curSize * 100 / totalSize).toInt()
-                    if (curProgress > lastProgress) {
-                        emitter.onNext(
-                            DownloadEmitItem(
-                                curProgress
-                            )
-                        )
-                        lastProgress = curProgress
-                    }
-
                     count = input.read(data)
                 }
                 emitter.onComplete()
@@ -259,9 +248,7 @@ class MainViewModel : ViewModel() {
                     // Don't leave an orphan entry in the MediaStore
                     contentResolver.delete(uri, null, null)
                 }
-                if(!emitter.isDisposed) {
-                    emitter.onError(t)
-                }
+                emitter.tryOnError(t)
             } finally {
                 input?.close()
                 output?.close()
@@ -281,6 +268,37 @@ class MainViewModel : ViewModel() {
             .subscribe(loadMoreObserver)
     }
 
+    fun shouldLoadMoreSongs(): Boolean {
+        return !isLoadingMore && !isSearching && lastResponseSongsSize > 0
+    }
+
+    private fun loadSearchHistories() {
+        liveSearchHistories.value?.addAll(
+            arrayListOf(
+                SearchHistory("thuy chi"),
+                SearchHistory("blackpink"),
+                SearchHistory("chipu"),
+                SearchHistory("justin bieber"),
+                SearchHistory("imagine dragon"),
+                SearchHistory("twenty one pilots"),
+                SearchHistory("rihanna"),
+                SearchHistory("orianna"),
+                SearchHistory("nguyen tran trung quoc"),
+                SearchHistory("vu cat tuong"),
+                SearchHistory("masew"),
+                SearchHistory("dat g"),
+            )
+        )
+        liveSearchHistories.notifyObservers()
+    }
+
+    fun removeSearchHistory(searchHistory: SearchHistory) {
+        // remove search history permanent
+
+        liveSearchHistories.value?.remove(searchHistory)
+        liveSearchHistories.notifyObservers()
+    }
+
     override fun onCleared() {
         super.onCleared()
         mediaPlayer.release()
@@ -290,16 +308,11 @@ class MainViewModel : ViewModel() {
 
     data class SongMedia(
         var song: Song? = null,
-        var position: Int? = null,
         var progress: Float = 0f, // 0->1
     ) {
-        var state: Int = song?.state ?: Song.STATE_IDLE
-            get() = song?.state ?: Song.STATE_IDLE
-            set(value) {
-                song?.state = value
-                field = value
-            }
+        var playState = SongPlayView.PlayState.STATE_STOPPED
 
+        // second
         var duration: Int = song?.duration ?: 0
             get() = song?.duration ?: 0
             set(value) {
@@ -308,12 +321,9 @@ class MainViewModel : ViewModel() {
             }
 
         fun reset() {
-            state = Song.STATE_IDLE
+            playState = SongPlayView.PlayState.STATE_STOPPED
             song = null
-            position = null
             progress = 0f
         }
     }
-
-    object DownloadCancelThrowable : Throwable()
 }

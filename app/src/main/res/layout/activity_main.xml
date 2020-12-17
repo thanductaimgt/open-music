@@ -5,8 +5,7 @@
     android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipToPadding="false"
-    android:paddingTop="34dp">
+    android:clipToPadding="false">
 
     <ImageView
         android:id="@+id/logoBg"
@@ -30,7 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:colorBackground"
-            android:minHeight="64dp"
+            android:minHeight="56dp"
             app:layout_scrollFlags="exitUntilCollapsed|scroll|snap">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -43,7 +42,9 @@
                     android:id="@+id/searchInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="8dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="1dp"
                     app:cardCornerRadius="10dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintLeft_toLeftOf="parent"
@@ -51,13 +52,12 @@
                     app:layout_constraintTop_toTopOf="parent">
 
                     <EditText
-                        android:text="thùy chi"
-                        android:imeOptions="actionSearch"
                         android:id="@+id/searchEditText"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:background="@null"
                         android:hint="@string/search_hint"
+                        android:imeOptions="actionSearch"
                         android:inputType="text"
                         android:paddingHorizontal="45dp"
                         android:textAlignment="center" />
@@ -85,7 +85,6 @@
                         android:visibility="invisible"
                         app:tint="?colorOnBackground" />
                 </androidx.cardview.widget.CardView>
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -156,14 +155,13 @@
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
+            android:id="@+id/songRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:overScrollMode="never"
-            android:paddingBottom="60dp"
+            android:overScrollMode="ifContentScrolls"
+            android:paddingBottom="100dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintTop_toTopOf="parent"
             tools:listitem="@layout/item_song" />
 
         <com.airbnb.lottie.LottieAnimationView
@@ -212,10 +210,30 @@
             app:layout_constraintTop_toBottomOf="@id/emptyIcon"
             tools:visibility="visible" />
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/searchHistoryRv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:alpha="0.9"
+            android:background="@drawable/rounded_bottom_bg"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_max="200dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:itemCount="12"
+            tools:listitem="@layout/item_search_history"
+            tools:visibility="visible" />
+
         <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/loadMoreAnimView"
             android:layout_width="60dp"
             android:layout_height="0dp"
+            android:layout_marginBottom="25dp"
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
@@ -232,13 +250,29 @@
         android:id="@+id/topButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_margin="16dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="8dp"
         android:alpha="0"
-        android:backgroundTint="#fad102"
+        android:backgroundTint="?attr/colorOnBackground"
         android:scaleType="fitCenter"
         android:src="@drawable/top"
-        app:fabSize="mini"
-        app:tint="@android:color/white"
+        app:fabCustomSize="28dp"
+        app:tint="?attr/colorOnPrimary"
         tools:alpha="1" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/downloadListAnimView"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="8dp"
+        app:lottie_autoPlay="false"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/downloading" />
+
+    <com.mgt.openmusic.SongPlayView
+        android:id="@+id/songPlayView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

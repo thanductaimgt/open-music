@@ -6,4 +6,23 @@
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
+
+    <style name="TransparentBottomSheetDialogTheme" parent="Theme.Design.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/TransparentBottomSheetStyle</item>
+    </style>
+
+    <style name="TransparentBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <attr name="colorBackgroundBold" format="color" />
+
+    <declare-styleable name="SongPlayView">
+        <attr name="songName" format="string" />
+        <attr name="artistName" format="string" />
+        <attr name="thumbSrc" format="reference"/>
+        <attr name="thumbUrl" format="string"/>
+        <attr name="duration" format="integer"/>
+        <attr name="progress" format="float"/>
+    </declare-styleable>
 </resources>

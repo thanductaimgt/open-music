@@ -2,11 +2,11 @@ package com.mgt.openmusic
 
 interface Event
 
-data class PlayEvent(val position: Int) : Event
+data class PlayEvent(val song:Song) : Event
 
-data class UpdateDurationEvent(val position: Int) : Event
+data class UpdateDurationEvent(val duration:Int) : Event
 
-data class CompleteEvent(val position: Int) : Event
+object CompleteEvent : Event
 
 data class SearchSuccess(val songs: ArrayList<Song>) : Event
 

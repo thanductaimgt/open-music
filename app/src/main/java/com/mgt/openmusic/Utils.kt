@@ -1,5 +1,6 @@
 package com.mgt.openmusic
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Resources.Theme
 import android.util.Log
@@ -9,6 +10,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.lifecycle.MutableLiveData
+import com.airbnb.lottie.LottieAnimationView
 
 
 object Utils {
@@ -43,10 +45,18 @@ object Utils {
     }
 
     @ColorInt
-    fun getAttrColor(theme: Theme, @AttrRes attr:Int): Int{
+    fun getAttrColor(theme: Theme, @AttrRes attr: Int): Int {
         val typedValue = TypedValue()
         theme.resolveAttribute(attr, typedValue, true)
         return typedValue.data
+    }
+
+    private fun convertDipsToPixels(context: Context, dipValue: Float): Int {
+        return (0.5f + dipValue * context.resources.displayMetrics.density).toInt()
+    }
+
+    fun dp(dipValue: Float): Int {
+        return convertDipsToPixels(MyApp.context, dipValue)
     }
 }
 
@@ -73,4 +83,45 @@ fun Throwable.print() {
 
 fun <T> MutableLiveData<T>.notifyObservers() {
     value = value
+}
+
+inline fun <T> T?.ifNotNull(block: (it: T) -> Unit): Otherwise {
+    return if (this != null) {
+        block(this as T)
+        OtherwiseNotExecute
+    } else {
+        OtherwiseExecute
+    }
+}
+
+interface Otherwise {
+    fun otherwise(block: () -> Unit)
+}
+
+object OtherwiseExecute : Otherwise {
+    override fun otherwise(block: () -> Unit) {
+        block()
+    }
+}
+
+object OtherwiseNotExecute : Otherwise {
+    override fun otherwise(block: () -> Unit) = Unit
+}
+
+fun ValueAnimator.resumeOrStart(){
+    if(isPaused) {
+        resume()
+    }else{
+        start()
+    }
+}
+
+fun LottieAnimationView.playForward(){
+    speed = 1f
+    playAnimation()
+}
+
+fun LottieAnimationView.playBackward(){
+    speed = -1f
+    playAnimation()
 }

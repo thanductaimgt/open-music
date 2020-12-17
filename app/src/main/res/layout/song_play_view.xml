@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:outlineProvider="bounds"
+    app:layout_constraintBottom_toBottomOf="parent"
+    tools:background="@android:color/black">
+
+    <View
+        android:id="@+id/bgView"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="40dp"
+        android:background="?attr/colorBackgroundBold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/playThumbImv"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        app:layout_constraintBottom_toBottomOf="@id/bgView"
+        app:layout_constraintEnd_toStartOf="@id/bgView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bgView"
+        tools:src="@mipmap/ic_launcher" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:alpha="0.65"
+        android:id="@+id/playAnimView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="12dp"
+        app:layout_constraintBottom_toBottomOf="@id/playThumbImv"
+        app:layout_constraintDimensionRatio="W,1:1"
+        app:layout_constraintEnd_toEndOf="@id/playThumbImv"
+        app:layout_constraintStart_toStartOf="@id/playThumbImv"
+        app:layout_constraintTop_toTopOf="@id/playThumbImv"
+        app:lottie_rawRes="@raw/play"
+        app:lottie_speed="-1" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/playLoadingAnimView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/playAnimView"
+        app:layout_constraintEnd_toEndOf="@id/playAnimView"
+        app:layout_constraintStart_toStartOf="@id/playAnimView"
+        app:layout_constraintTop_toTopOf="@id/playAnimView"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/loading_circle" />
+
+    <FrameLayout
+        android:id="@+id/playTitleView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toTopOf="@id/playSeekBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/playSeekBar"
+        app:layout_constraintTop_toTopOf="@id/bgView">
+
+        <TextView
+            android:id="@+id/playTitleTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:letterSpacing="0.1"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textColor="?colorOnBackground"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="How You Like That - BLACKPINK" />
+    </FrameLayout>
+
+    <SeekBar
+        android:id="@+id/playSeekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/playDurationTextView"
+        app:layout_constraintStart_toEndOf="@id/playThumbImv"
+        app:layout_constraintTop_toBottomOf="@id/playTitleView" />
+
+    <TextView
+        android:id="@+id/playDurationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/duration_bg"
+        android:paddingHorizontal="4dp"
+        android:textColor="?colorOnPrimary"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/playSeekBar"
+        app:layout_constraintEnd_toEndOf="@id/playTitleView"
+        app:layout_constraintTop_toTopOf="@id/playSeekBar"
+        tools:text="3:01" />
+</androidx.constraintlayout.widget.ConstraintLayout>
